@@ -70,7 +70,7 @@ def max_dimension_resize(image_pil, mask_pil, max_dim):
     if w > max_dim:
         h = int((h / w) * max_dim)
         w = int(max_dim)
-    elif h > max_dim:
+    if h > max_dim:
         w = int((w / h) * max_dim)
         h = int(max_dim)
     print(f'Output size: {w} x {h}')
@@ -99,7 +99,7 @@ def save_image_from_np_array(output_image, output_name, overwrite=False):
 
     output_path = f'{output_name}.jpg'
     if os.path.isfile(output_path) and not overwrite:
-        output_path = f'{output_name}_{datetime.datetime}.jpg'
+        output_path = f'{output_name}_{datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.jpg'
     print(f'\nSaving output image to: "{output_path}"\n')
 
     pil_image.save(output_path)
