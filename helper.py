@@ -94,11 +94,11 @@ def preprocess_images(image_path, mask_path, max_dim, interactive=False):
     return image_np, mask_np
 
 
-def save_image_from_np_array(output_image, output_name, overwrite=False):
+def save_image_from_np_array(output_image, output_name, overwrite=False, timestamp=False):
     pil_image = Image.fromarray((output_image.transpose(1, 2, 0) * 255.0).astype('uint8'))
 
     output_path = f'{output_name}.jpg'
-    if os.path.isfile(output_path) and not overwrite:
+    if (os.path.isfile(output_path) and not overwrite) or timestamp:
         output_path = f'{output_name}_{datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.jpg'
     print(f'\nSaving output image to: "{output_path}"\n')
 

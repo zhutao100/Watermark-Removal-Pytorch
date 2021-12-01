@@ -4,7 +4,8 @@ from .modules import Conv2dBlock, Concat
 
 
 class SkipEncoderDecoder(nn.Module):
-    def __init__(self, input_depth, num_channels_down=[128] * 5, num_channels_up=[128] * 5, num_channels_skip=[128] * 5):
+    def __init__(self, input_depth, num_channels_down=[128] * 5,
+                 num_channels_up=[128] * 5, num_channels_skip=[128] * 5):
         super(SkipEncoderDecoder, self).__init__()
 
         self.model = nn.Sequential()

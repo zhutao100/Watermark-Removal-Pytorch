@@ -3,9 +3,10 @@ from api import remove_watermark
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Removing Watermark')
-    parser.add_argument('--image-path', type=str, default='./data/watermark-unavailable/watermarked/watermarked0.png',
+    parser.add_argument('--image-path', '-i', type=str,
+                        default='./data/watermark-unavailable/watermarked/watermarked0.png',
                         help='Path to the "watermarked" image.')
-    parser.add_argument('--mask-path', type=str, default='./data/watermark-unavailable/masks/mask0.png',
+    parser.add_argument('--mask-path', '-m', type=str, default='./data/watermark-unavailable/masks/mask0.png',
                         help='Path to the "watermark" image.')
     parser.add_argument('--input-depth', type=int, default=32,
                         help=("Max channel dimension of the noise input. "
@@ -18,6 +19,7 @@ if __name__ == '__main__':
     parser.add_argument('--overwrite', '-f', action='store_true', help='Overwrite existing output file')
     parser.add_argument('--intermediate-results', action='store_true', help='Store intermediate results')
     parser.add_argument('--interactive', action='store_true', help='Render images in matplotlib interactive mode')
+    parser.add_argument('--timestamp', action='store_true', help='Always add timestamps to output filenames')
 
     args = parser.parse_args()
 
@@ -30,7 +32,8 @@ if __name__ == '__main__':
         input_depth=args.input_depth,
         lr=args.lr,
         training_steps=args.training_steps,
-        intermediate_results=args.intermediate_results,
+        save_intermediate_results=args.intermediate_results,
         overwrite=args.overwrite,
         interactive=args.interactive,
+        timestamp=args.timestamp,
     )
