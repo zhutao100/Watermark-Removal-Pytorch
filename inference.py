@@ -20,6 +20,7 @@ if __name__ == '__main__':
     parser.add_argument('--intermediate-results', action='store_true', help='Store intermediate results')
     parser.add_argument('--interactive', action='store_true', help='Render images in matplotlib interactive mode')
     parser.add_argument('--timestamp', action='store_true', help='Always add timestamps to output filenames')
+    parser.add_argument('--silent', action='store_true', help='Silent mode; no image window pop-ups.')
 
     args = parser.parse_args()
 
@@ -36,4 +37,5 @@ if __name__ == '__main__':
         overwrite=args.overwrite,
         interactive=args.interactive,
         timestamp=args.timestamp,
+        silent=args.silent,
     )

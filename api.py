@@ -10,7 +10,7 @@ def remove_watermark(image_path, mask_path, max_dim, reg_noise,
                      input_depth, lr, show_step, training_steps, tqdm_length=100,
                      save_intermediate_results=False, overwrite=False, interactive=False,
                      visualize_intermediate_results=False, add_input_depth_postfix=True,
-                     timestamp=False):
+                     timestamp=False, silent=False):
     DTYPE = torch.cuda.FloatTensor if torch.cuda.is_available() else torch.FloatTensor
     if not torch.cuda.is_available():
         print('\nSetting device to "cpu", since torch is not built with "cuda" support...')
@@ -19,7 +19,7 @@ def remove_watermark(image_path, mask_path, max_dim, reg_noise,
     output_prefix = image_path.split('/')[-1].split('.')[-2]
     input_depth_postfix = f'_input-depth-{input_depth}'
 
-    image_np, mask_np = helper.preprocess_images(image_path, mask_path, max_dim, interactive)
+    image_np, mask_np = helper.preprocess_images(image_path, mask_path, max_dim, interactive, silent)
 
     print('Building the model...')
     generator = SkipEncoderDecoder(
@@ -67,7 +67,7 @@ def remove_watermark(image_path, mask_path, max_dim, reg_noise,
                     input_depth_postfix if add_input_depth_postfix else ''
                 helper.save_image_from_np_array(output_image, intermediate_name, overwrite, timestamp)
 
-            if visualize_intermediate_results:
+            if visualize_intermediate_results and not silent:
                 p = helper.visualize_sample(image_np, output_image, nrow=2, size_factor=10, interactive=interactive)
                 visualize_processes.append(p)
 
@@ -79,10 +79,10 @@ def remove_watermark(image_path, mask_path, max_dim, reg_noise,
         p.join()
 
     output_image = helper.torch_to_np_array(output)
-    p_output = helper.visualize_sample(output_image, nrow=1, size_factor=10, interactive=interactive)
+    if not silent:
+        p_output = helper.visualize_sample(output_image, nrow=1, size_factor=10, interactive=interactive)
+        p_output.join()
 
     output_name = f'{output_prefix}-output_step-{training_steps}' + \
         input_depth_postfix if add_input_depth_postfix else ''
     helper.save_image_from_np_array(output_image, output_name, overwrite, timestamp)
-
-    p_output.join()

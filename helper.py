@@ -77,7 +77,7 @@ def max_dimension_resize(image_pil, mask_pil, max_dim):
     return image_pil.resize((w, h)), mask_pil.resize((w, h))
 
 
-def preprocess_images(image_path, mask_path, max_dim, interactive=False):
+def preprocess_images(image_path, mask_path, max_dim, interactive=False, silent=False):
     image_pil = read_image(image_path).convert('RGB')
     mask_pil = read_image(mask_path).convert('RGB')
 
@@ -86,10 +86,10 @@ def preprocess_images(image_path, mask_path, max_dim, interactive=False):
     image_np = pil_to_np_array(image_pil)
     mask_np = pil_to_np_array(mask_pil)
 
-    print('Visualizing mask overlap...')
-
-    p = visualize_sample(image_np, mask_np, image_np * mask_np, nrow=3, size_factor=10, interactive=interactive)
-    p.join()
+    if not silent:
+      print('Visualizing mask overlap...')
+      p = visualize_sample(image_np, mask_np, image_np * mask_np, nrow=3, size_factor=10, interactive=interactive)
+      p.join()
 
     return image_np, mask_np
 
