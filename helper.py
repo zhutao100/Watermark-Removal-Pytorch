@@ -102,4 +102,4 @@ def save_image_from_np_array(output_image, output_name, overwrite=False, timesta
         output_path = f'{output_name}_{datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.jpg'
     print(f'\nSaving output image to: "{output_path}"\n')
 
-    pil_image.save(output_path)
+    pil_image.save(output_path, quality=95)

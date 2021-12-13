@@ -5,19 +5,33 @@ import helper
 import os
 import torch
 
+DEFAULT_REG_NOISE = 0.03
+DEFAULT_INPUT_DEPTH = 32
+DEFAULT_LEARNING_RATE = 0.01
+
+
+def form_output_postfix(reg_noise, input_depth, lr):
+    output_postfix = ''
+    if input_depth != DEFAULT_INPUT_DEPTH:
+        output_postfix += f'_input-depth-{input_depth}'
+    if reg_noise != DEFAULT_REG_NOISE:
+        output_postfix += f'_reg-noise-{reg_noise}'
+    if lr != DEFAULT_LEARNING_RATE:
+        output_postfix += f'_lr-{lr}'
+    return output_postfix
+
 
 def remove_watermark(image_path, mask_path, max_dim, reg_noise,
                      input_depth, lr, show_step, training_steps, tqdm_length=100,
                      save_intermediate_results=False, overwrite=False, interactive=False,
-                     visualize_intermediate_results=False, add_input_depth_postfix=True,
-                     timestamp=False, silent=False):
+                     visualize_intermediate_results=False, timestamp=False, silent=False):
     DTYPE = torch.cuda.FloatTensor if torch.cuda.is_available() else torch.FloatTensor
     if not torch.cuda.is_available():
         print('\nSetting device to "cpu", since torch is not built with "cuda" support...')
         print('It is recommended to use GPU if possible...')
 
     output_prefix = image_path.split('/')[-1].split('.')[-2]
-    input_depth_postfix = f'_input-depth-{input_depth}'
+    output_postfix = form_output_postfix(reg_noise, input_depth, lr)
 
     image_np, mask_np = helper.preprocess_images(image_path, mask_path, max_dim, interactive, silent)
 
@@ -63,8 +77,7 @@ def remove_watermark(image_path, mask_path, max_dim, reg_noise,
         if show_step and step % show_step == 0:
             output_image = helper.torch_to_np_array(output)
             if save_intermediate_results:
-                intermediate_name = f'{intermediate_dir}/step{step}' + \
-                    input_depth_postfix if add_input_depth_postfix else ''
+                intermediate_name = f'{intermediate_dir}/step-{step}{output_postfix}'
                 helper.save_image_from_np_array(output_image, intermediate_name, overwrite, timestamp)
 
             if visualize_intermediate_results and not silent:
@@ -83,6 +96,5 @@ def remove_watermark(image_path, mask_path, max_dim, reg_noise,
         p_output = helper.visualize_sample(output_image, nrow=1, size_factor=10, interactive=interactive)
         p_output.join()
 
-    output_name = f'{output_prefix}-output_step-{training_steps}' + \
-        input_depth_postfix if add_input_depth_postfix else ''
+    output_name = f'{output_prefix}-output_step-{training_steps}{output_postfix}'
     helper.save_image_from_np_array(output_image, output_name, overwrite, timestamp)

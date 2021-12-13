@@ -1,5 +1,5 @@
 import argparse
-from api import remove_watermark
+from api import remove_watermark, DEFAULT_REG_NOISE, DEFAULT_LEARNING_RATE, DEFAULT_INPUT_DEPTH
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Removing Watermark')
@@ -8,13 +8,14 @@ if __name__ == '__main__':
                         help='Path to the "watermarked" image.')
     parser.add_argument('--mask-path', '-m', type=str, default='./data/watermark-unavailable/masks/mask0.png',
                         help='Path to the "watermark" image.')
-    parser.add_argument('--input-depth', type=int, default=32,
+    parser.add_argument('--input-depth', type=int, default=DEFAULT_INPUT_DEPTH,
                         help=("Max channel dimension of the noise input. "
                               "Set it based on gpu/device memory you have available."))
-    parser.add_argument('--lr', type=float, default=0.01, help='Learning rate.')
+    parser.add_argument('--lr', type=float, default=DEFAULT_LEARNING_RATE, help='Learning rate.')
     parser.add_argument('--training-steps', type=int, default=3000, help='Number of training iterations.')
     parser.add_argument('--show-step', type=int, default=200, help='Interval for visualizing results.')
-    parser.add_argument('--reg-noise', type=float, default=0.03, help='Hyper-parameter for regularized noise input.')
+    parser.add_argument('--reg-noise', type=float, default=DEFAULT_REG_NOISE,
+                        help='Hyper-parameter for regularized noise input.')
     parser.add_argument('--max-dim', type=float, default=512, help='Max dimension of the final output image')
     parser.add_argument('--overwrite', '-f', action='store_true', help='Overwrite existing output file')
     parser.add_argument('--intermediate-results', action='store_true', help='Store intermediate results')
