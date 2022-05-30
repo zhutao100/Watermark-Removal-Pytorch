@@ -54,15 +54,15 @@ def visualize_sample(*images_np, nrow=3, size_factor=10, interactive=False):
 
 def show_image_grid(grid, images_np_len, size_factor, interactive):
     if interactive:
-      plt.ion()
+        plt.ion()
     plt.figure(figsize=(images_np_len + size_factor, 12 + size_factor))
     plt.axis('off')
     plt.imshow(grid.transpose(1, 2, 0))
     if interactive:
-      plt.draw()
-      plt.pause(2)
+        plt.draw()
+        plt.pause(2)
     else:
-      plt.show()
+        plt.show()
 
 
 def max_dimension_resize(image_pil, mask_pil, max_dim):
@@ -87,9 +87,9 @@ def preprocess_images(image_path, mask_path, max_dim, interactive=False, silent=
     mask_np = pil_to_np_array(mask_pil)
 
     if not silent:
-      print('Visualizing mask overlap...')
-      p = visualize_sample(image_np, mask_np, image_np * mask_np, nrow=3, size_factor=10, interactive=interactive)
-      p.join()
+        print('Visualizing mask overlap...')
+        p = visualize_sample(image_np, mask_np, image_np * mask_np, nrow=3, size_factor=10, interactive=interactive)
+        p.join()
 
     return image_np, mask_np
 

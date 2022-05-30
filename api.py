@@ -4,6 +4,12 @@ from tqdm.auto import tqdm
 import helper
 import os
 import torch
+import platform
+
+if platform.system() == 'Darwin':
+    device = 'mps' if torch.backends.mps.is_available() else 'cpu'
+else:
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 DEFAULT_REG_NOISE = 0.03
 DEFAULT_INPUT_DEPTH = 32
@@ -41,9 +47,9 @@ def remove_watermark(image_path, mask_path, max_dim, reg_noise,
         num_channels_down=[128] * 5,
         num_channels_up=[128] * 5,
         num_channels_skip=[128] * 5
-    ).type(DTYPE)
+    ).type(DTYPE).to(device=device)
 
-    objective = torch.nn.MSELoss().type(DTYPE)
+    objective = torch.nn.MSELoss().type(DTYPE).to(device=device)
     optimizer = optim.Adam(generator.parameters(), lr)
 
     image_var = helper.np_to_torch_array(image_np).type(DTYPE)
@@ -64,10 +70,10 @@ def remove_watermark(image_path, mask_path, max_dim, reg_noise,
         os.makedirs(intermediate_dir, exist_ok=True)
     for step in progress_bar:
         optimizer.zero_grad()
-        generator_input = generator_input_saved
 
+        generator_input = generator_input_saved
         if reg_noise > 0:
-            generator_input = generator_input_saved + (noise.normal_() * reg_noise)
+            generator_input += noise.normal_() * reg_noise
 
         output = generator(generator_input)
 
