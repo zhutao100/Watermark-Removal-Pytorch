@@ -31,9 +31,23 @@ def remove_watermark(image_path, mask_path, max_dim, reg_noise,
                      input_depth, lr, show_step, training_steps, tqdm_length=100,
                      save_intermediate_results=False, overwrite=False, interactive=False,
                      visualize_intermediate_results=False, timestamp=False, silent=False):
-    DTYPE = torch.cuda.FloatTensor if torch.cuda.is_available() else torch.FloatTensor
-    if not torch.cuda.is_available():
-        print('\nSetting device to "cpu", since torch is not built with "cuda" support...')
+    DTYPE = torch.FloatTensor
+    has_set_device = False
+    if torch.cuda.is_available():
+        device = 'cuda'
+        has_set_device = True
+        print("Setting Device to CUDA...")
+    try:
+        if torch.backends.mps.is_available():
+            device = 'mps'
+            has_set_device = True
+            print("Setting Device to MPS...")
+    except Exception as e:
+        print(f"Your version of pytorch might be too old, which does not support MPS. Error: \n{e}")
+        pass
+    if not has_set_device:
+        device = 'cpu'
+        print('\nSetting device to "cpu", since torch is not built with "cuda" or "mps" support...')
         print('It is recommended to use GPU if possible...')
 
     output_prefix = image_path.split('/')[-1].split('.')[-2]
@@ -47,15 +61,15 @@ def remove_watermark(image_path, mask_path, max_dim, reg_noise,
         num_channels_down=[128] * 5,
         num_channels_up=[128] * 5,
         num_channels_skip=[128] * 5
-    ).type(DTYPE).to(device=device)
+    ).type(DTYPE).to(device)
 
-    objective = torch.nn.MSELoss().type(DTYPE).to(device=device)
+    objective = torch.nn.MSELoss().type(DTYPE).to(device)
     optimizer = optim.Adam(generator.parameters(), lr)
 
-    image_var = helper.np_to_torch_array(image_np).type(DTYPE)
-    mask_var = helper.np_to_torch_array(mask_np).type(DTYPE)
+    image_var = helper.np_to_torch_array(image_np).type(DTYPE).to(device)
+    mask_var = helper.np_to_torch_array(mask_np).type(DTYPE).to(device)
 
-    generator_input = input_noise(input_depth, image_np.shape[1:]).type(DTYPE)
+    generator_input = input_noise(input_depth, image_np.shape[1:]).type(DTYPE).to(device)
 
     generator_input_saved = generator_input.detach().clone()
     noise = generator_input.detach().clone()
