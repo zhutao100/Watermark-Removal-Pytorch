@@ -4,14 +4,22 @@ from .modules import Conv2dBlock, Concat
 
 
 class SkipEncoderDecoder(nn.Module):
-    def __init__(self, input_depth, num_channels_down=[128] * 5,
-                 num_channels_up=[128] * 5, num_channels_skip=[128] * 5):
-        super(SkipEncoderDecoder, self).__init__()
+    def __init__(self, input_depth, num_channels_down=None,
+                 num_channels_up=None, num_channels_skip=None):
+        super().__init__()
+        
+        # Fix dangerous default values
+        if num_channels_down is None:
+            num_channels_down = [128] * 5
+        if num_channels_up is None:
+            num_channels_up = [128] * 5
+        if num_channels_skip is None:
+            num_channels_skip = [128] * 5
 
         self.model = nn.Sequential()
         model_tmp = self.model
 
-        for i in range(len(num_channels_down)):
+        for i, _ in enumerate(num_channels_down):
 
             deeper = nn.Sequential()
             skip = nn.Sequential()
@@ -56,6 +64,6 @@ class SkipEncoderDecoder(nn.Module):
         return self.model(x)
 
 
-def input_noise(INPUT_DEPTH, spatial_size, scale=1. / 10):
-    shape = [1, INPUT_DEPTH, spatial_size[0], spatial_size[1]]
+def input_noise(input_depth, spatial_size, scale=1. / 10):
+    shape = [1, input_depth, spatial_size[0], spatial_size[1]]
     return torch.rand(*shape) * scale

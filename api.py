@@ -1,15 +1,12 @@
-from model.generator import SkipEncoderDecoder, input_noise
+import os
+from pathlib import Path
+
+import torch
 from torch import optim
 from tqdm.auto import tqdm
-import helper
-import os
-import torch
-import platform
 
-if platform.system() == 'Darwin':
-    device = 'mps' if torch.backends.mps.is_available() else 'cpu'
-else:
-    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+from model.generator import SkipEncoderDecoder, input_noise
+import helper
 
 DEFAULT_REG_NOISE = 0.03
 DEFAULT_INPUT_DEPTH = 32
@@ -17,6 +14,16 @@ DEFAULT_LEARNING_RATE = 0.01
 
 
 def form_output_postfix(reg_noise, input_depth, lr):
+    """Generate a postfix for output filenames based on non-default parameters.
+    
+    Args:
+        reg_noise (float): Regularization noise value
+        input_depth (int): Input depth value
+        lr (float): Learning rate value
+        
+    Returns:
+        str: Formatted postfix string
+    """
     output_postfix = ''
     if input_depth != DEFAULT_INPUT_DEPTH:
         output_postfix += f'_input-depth-{input_depth}'
@@ -31,26 +38,41 @@ def remove_watermark(image_path, mask_path, max_dim, reg_noise,
                      input_depth, lr, show_step, training_steps, tqdm_length=100,
                      save_intermediate_results=False, overwrite=False, interactive=False,
                      visualize_intermediate_results=False, timestamp=False, silent=False):
+    """Remove watermark from an image using deep image priors.
+    
+    Args:
+        image_path (str): Path to the watermarked image
+        mask_path (str): Path to the mask image
+        max_dim (float): Maximum dimension for output image
+        reg_noise (float): Regularization noise parameter
+        input_depth (int): Input depth for the generator
+        lr (float): Learning rate for optimization
+        show_step (int): Interval for visualizing results
+        training_steps (int): Number of training iterations
+        tqdm_length (int, optional): Length of tqdm progress bar. Defaults to 100.
+        save_intermediate_results (bool, optional): Save intermediate results. Defaults to False.
+        overwrite (bool, optional): Overwrite existing output files. Defaults to False.
+        interactive (bool, optional): Render images in matplotlib interactive mode. Defaults to False.
+        visualize_intermediate_results (bool, optional): Visualize intermediate results. Defaults to False.
+        timestamp (bool, optional): Add timestamps to output filenames. Defaults to False.
+        silent (bool, optional): Run in silent mode with no image window pop-ups. Defaults to False.
+    """
     DTYPE = torch.FloatTensor
-    has_set_device = False
+
+    # Improved device detection logic
+    device = 'cpu'  # Default to CPU
     if torch.cuda.is_available():
         device = 'cuda'
-        has_set_device = True
         print("Setting Device to CUDA...")
-    try:
-        if torch.backends.mps.is_available():
-            device = 'mps'
-            has_set_device = True
-            print("Setting Device to MPS...")
-    except Exception as e:
-        print(f"Your version of pytorch might be too old, which does not support MPS. Error: \n{e}")
-        pass
-    if not has_set_device:
-        device = 'cpu'
+    elif hasattr(torch.backends, 'mps') and torch.backends.mps.is_available():
+        device = 'mps'
+        print("Setting Device to MPS...")
+    else:
         print('\nSetting device to "cpu", since torch is not built with "cuda" or "mps" support...')
         print('It is recommended to use GPU if possible...')
 
-    output_prefix = image_path.split('/')[-1].split('.')[-2]
+    # Cross-platform compatible path handling
+    output_prefix = Path(image_path).stem
     output_postfix = form_output_postfix(reg_noise, input_depth, lr)
 
     image_np, mask_np = helper.preprocess_images(image_path, mask_path, max_dim, interactive, silent)

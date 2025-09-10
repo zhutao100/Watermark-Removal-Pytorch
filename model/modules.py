@@ -3,9 +3,9 @@ from torch import nn
 import numpy as np
 
 
-class DepthwiseSeperableConv2d(nn.Module):
+class DepthwiseSeparableConv2d(nn.Module):
     def __init__(self, input_channels, output_channels, **kwargs):
-        super(DepthwiseSeperableConv2d, self).__init__()
+        super().__init__()
 
         self.depthwise = nn.Conv2d(input_channels, input_channels, groups=input_channels, **kwargs)
         self.pointwise = nn.Conv2d(input_channels, output_channels, kernel_size=1)
@@ -19,11 +19,11 @@ class DepthwiseSeperableConv2d(nn.Module):
 
 class Conv2dBlock(nn.Module):
     def __init__(self, in_channels, out_channels, kernel_size, stride=1, bias=False):
-        super(Conv2dBlock, self).__init__()
+        super().__init__()
 
         self.model = nn.Sequential(
             nn.ReflectionPad2d(int((kernel_size - 1) / 2)),
-            DepthwiseSeperableConv2d(in_channels, out_channels, kernel_size=kernel_size,
+            DepthwiseSeparableConv2d(in_channels, out_channels, kernel_size=kernel_size,
                                      stride=stride, padding=0, bias=bias),
             nn.BatchNorm2d(out_channels),
             nn.LeakyReLU(0.2)
@@ -35,16 +35,16 @@ class Conv2dBlock(nn.Module):
 
 class Concat(nn.Module):
     def __init__(self, dim, *args):
-        super(Concat, self).__init__()
+        super().__init__()
         self.dim = dim
 
         for idx, module in enumerate(args):
             self.add_module(str(idx), module)
 
-    def forward(self, input):
+    def forward(self, input_tensor):
         inputs = []
         for module in self._modules.values():
-            inputs.append(module(input))
+            inputs.append(module(input_tensor))
 
         inputs_shapes2 = [x.shape[2] for x in inputs]
         inputs_shapes3 = [x.shape[3] for x in inputs]

@@ -1,4 +1,5 @@
 import argparse
+
 from api import remove_watermark, DEFAULT_REG_NOISE, DEFAULT_LEARNING_RATE, DEFAULT_INPUT_DEPTH
 
 if __name__ == '__main__':
@@ -25,18 +26,21 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    remove_watermark(
-        image_path=args.image_path,
-        mask_path=args.mask_path,
-        max_dim=args.max_dim,
-        show_step=args.show_step,
-        reg_noise=args.reg_noise,
-        input_depth=args.input_depth,
-        lr=args.lr,
-        training_steps=args.training_steps,
-        save_intermediate_results=args.intermediate_results,
-        overwrite=args.overwrite,
-        interactive=args.interactive,
-        timestamp=args.timestamp,
-        silent=args.silent,
-    )
+    try:
+        remove_watermark(
+            image_path=args.image_path,
+            mask_path=args.mask_path,
+            max_dim=args.max_dim,
+            show_step=args.show_step,
+            reg_noise=args.reg_noise,
+            input_depth=args.input_depth,
+            lr=args.lr,
+            training_steps=args.training_steps,
+            save_intermediate_results=args.intermediate_results,
+            overwrite=args.overwrite,
+            interactive=args.interactive,
+            timestamp=args.timestamp,
+            silent=args.silent,
+        )
+    except KeyboardInterrupt:
+        print("User interrupted.")
