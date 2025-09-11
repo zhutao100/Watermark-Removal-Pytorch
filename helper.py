@@ -26,16 +26,20 @@ def pil_to_np_array(pil_image):
     return ar.astype(np.float32) / 255.
 
 
-def np_to_torch_array(np_array):
+def np_to_torch_array(np_array, device=None):
     """Convert numpy array to torch tensor with batch dimension.
     
     Args:
         np_array (numpy.ndarray): Input numpy array
+        device (torch.device, optional): Device to place tensor on
         
     Returns:
         torch.Tensor: Torch tensor with added batch dimension
     """
-    return torch.from_numpy(np_array)[None, :]
+    tensor = torch.from_numpy(np_array).unsqueeze(0)
+    if device is not None:
+        tensor = tensor.to(device)
+    return tensor
 
 
 def torch_to_np_array(torch_array):
@@ -47,7 +51,7 @@ def torch_to_np_array(torch_array):
     Returns:
         numpy.ndarray: Numpy array without batch dimension
     """
-    return torch_array.detach().cpu().numpy()[0]
+    return torch_array.detach().cpu().numpy().squeeze(0)
 
 
 def read_image(path):

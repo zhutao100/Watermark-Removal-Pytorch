@@ -1,6 +1,5 @@
 import torch
 from torch import nn
-import numpy as np
 
 
 class DepthwiseSeparableConv2d(nn.Module):
@@ -46,11 +45,12 @@ class Concat(nn.Module):
         for module in self._modules.values():
             inputs.append(module(input_tensor))
 
-        inputs_shapes2 = [x.shape[2] for x in inputs]
-        inputs_shapes3 = [x.shape[3] for x in inputs]
+        # Use PyTorch operations for shape checking
+        inputs_shapes2 = [x.size(2) for x in inputs]
+        inputs_shapes3 = [x.size(3) for x in inputs]
 
-        if np.all(np.array(inputs_shapes2) == min(inputs_shapes2)) and np.all(
-                np.array(inputs_shapes3) == min(inputs_shapes3)):
+        if all(s == min(inputs_shapes2) for s in inputs_shapes2) and \
+           all(s == min(inputs_shapes3) for s in inputs_shapes3):
             inputs_ = inputs
         else:
             target_shape2 = min(inputs_shapes2)

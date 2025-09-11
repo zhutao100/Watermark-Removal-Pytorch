@@ -64,6 +64,9 @@ class SkipEncoderDecoder(nn.Module):
         return self.model(x)
 
 
-def input_noise(input_depth, spatial_size, scale=1. / 10):
+def input_noise(input_depth, spatial_size, scale=1. / 10, device=None):
     shape = [1, input_depth, spatial_size[0], spatial_size[1]]
-    return torch.rand(*shape) * scale
+    noise = torch.rand(*shape) * scale
+    if device is not None:
+        noise = noise.to(device)
+    return noise

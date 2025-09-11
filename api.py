@@ -57,8 +57,6 @@ def remove_watermark(image_path, mask_path, max_dim, reg_noise,
         timestamp (bool, optional): Add timestamps to output filenames. Defaults to False.
         silent (bool, optional): Run in silent mode with no image window pop-ups. Defaults to False.
     """
-    DTYPE = torch.FloatTensor
-
     # Improved device detection logic
     device = 'cpu'  # Default to CPU
     if torch.cuda.is_available():
@@ -83,18 +81,19 @@ def remove_watermark(image_path, mask_path, max_dim, reg_noise,
         num_channels_down=[128] * 5,
         num_channels_up=[128] * 5,
         num_channels_skip=[128] * 5
-    ).type(DTYPE).to(device)
+    ).to(device)
 
-    objective = torch.nn.MSELoss().type(DTYPE).to(device)
+    objective = torch.nn.MSELoss().to(device)
     optimizer = optim.Adam(generator.parameters(), lr)
 
-    image_var = helper.np_to_torch_array(image_np).type(DTYPE).to(device)
-    mask_var = helper.np_to_torch_array(mask_np).type(DTYPE).to(device)
+    image_var = helper.np_to_torch_array(image_np, device=device)
+    mask_var = helper.np_to_torch_array(mask_np, device=device)
 
-    generator_input = input_noise(input_depth, image_np.shape[1:]).type(DTYPE).to(device)
+    generator_input = input_noise(input_depth, image_np.shape[1:], device=device)
 
-    generator_input_saved = generator_input.detach().clone()
-    noise = generator_input.detach().clone()
+    # Store shape and device for efficient noise generation
+    generator_input_shape = generator_input.shape
+    generator_input_device = generator_input.device
 
     print('\nStarting training...\n')
 
@@ -107,36 +106,42 @@ def remove_watermark(image_path, mask_path, max_dim, reg_noise,
     for step in progress_bar:
         optimizer.zero_grad()
 
-        generator_input = generator_input_saved
+        # Generate input with regularization noise
         if reg_noise > 0:
-            generator_input += noise.normal_() * reg_noise
+            noise = torch.randn(generator_input_shape, device=generator_input_device) * reg_noise
+            generator_input_with_noise = generator_input + noise
+        else:
+            generator_input_with_noise = generator_input
 
-        output = generator(generator_input)
+        output = generator(generator_input_with_noise)
 
         loss = objective(output * mask_var, image_var * mask_var)
         loss.backward()
+        optimizer.step()
 
+        # Visualization and saving (no gradients needed)
         if show_step and step % show_step == 0:
-            output_image = helper.torch_to_np_array(output)
-            if save_intermediate_results:
-                intermediate_name = f'{intermediate_dir}/step-{step}{output_postfix}'
-                helper.save_image_from_np_array(output_image, intermediate_name, overwrite, timestamp)
+            with torch.no_grad():
+                output_image = helper.torch_to_np_array(output)
+                if save_intermediate_results:
+                    intermediate_name = f'{intermediate_dir}/step-{step}{output_postfix}'
+                    helper.save_image_from_np_array(output_image, intermediate_name, overwrite, timestamp)
 
-            if visualize_intermediate_results and not silent:
-                p = helper.visualize_sample(image_np, output_image, nrow=2, size_factor=10, interactive=interactive)
-                visualize_processes.append(p)
+                if visualize_intermediate_results and not silent:
+                    p = helper.visualize_sample(image_np, output_image, nrow=2, size_factor=10, interactive=interactive)
+                    visualize_processes.append(p)
 
         progress_bar.set_postfix(Loss=loss.item())
-
-        optimizer.step()
 
     for p in visualize_processes:
         p.join()
 
-    output_image = helper.torch_to_np_array(output)
-    if not silent:
-        p_output = helper.visualize_sample(output_image, nrow=1, size_factor=10, interactive=interactive)
-        p_output.join()
+    # Final output generation (no gradients needed)
+    with torch.no_grad():
+        output_image = helper.torch_to_np_array(output)
+        if not silent:
+            p_output = helper.visualize_sample(output_image, nrow=1, size_factor=10, interactive=interactive)
+            p_output.join()
 
     output_name = f'{output_prefix}-output_step-{training_steps}{output_postfix}'
     helper.save_image_from_np_array(output_image, output_name, overwrite, timestamp)
